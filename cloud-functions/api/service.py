@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 import re
 import smtplib
 import ssl
@@ -86,6 +87,110 @@ def slug(text: str) -> str:
     return cleaned or "certificate"
 
 
+# 随机但合理的预置数据：让用户进入页面即可看到完整效果。
+_PEOPLE = [
+    ("王子轩", "Wang Zixuan", "男"),
+    ("李欣怡", "Li Xinyi", "女"),
+    ("张浩然", "Zhang Haoran", "男"),
+    ("刘梓涵", "Liu Zihan", "女"),
+    ("陈宇航", "Chen Yuhang", "男"),
+    ("杨思琪", "Yang Siqi", "女"),
+    ("黄俊杰", "Huang Junjie", "男"),
+    ("赵可馨", "Zhao Kexin", "女"),
+    ("周雨桐", "Zhou Yutong", "女"),
+    ("吴梦琪", "Wu Mengqi", "女"),
+]
+
+_SCHOOLS = [
+    {
+        "cn": "北京市第四中学", "en": "Beijing No. 4 High School",
+        "short_en": "Beijing No. 4", "jp": "北京市第四中学",
+        "addr_cn": "北京市西城区西黄城根北街甲2号",
+        "addr_en": "No. 2A, Xihuangchenggen North Street, Xicheng District, Beijing",
+        "post": "100034",
+    },
+    {
+        "cn": "上海市复兴高级中学", "en": "Shanghai Fuxing Senior High School",
+        "short_en": "Shanghai Fuxing", "jp": "上海市復興高級中学",
+        "addr_cn": "上海市虹口区国和路323号",
+        "addr_en": "No. 323 Guohe Road, Hongkou District, Shanghai",
+        "post": "200437",
+    },
+    {
+        "cn": "广州市第二中学", "en": "Guangzhou No. 2 High School",
+        "short_en": "Guangzhou No. 2", "jp": "広州市第二中学",
+        "addr_cn": "广州市越秀区应元路21号",
+        "addr_en": "No. 21 Yingyuan Road, Yuexiu District, Guangzhou",
+        "post": "510030",
+    },
+    {
+        "cn": "成都市第七中学", "en": "Chengdu No. 7 High School",
+        "short_en": "Chengdu No. 7", "jp": "成都市第七中学",
+        "addr_cn": "成都市武侯区林荫中街1号",
+        "addr_en": "No. 1 Linyin Middle Street, Wuhou District, Chengdu",
+        "post": "610041",
+    },
+]
+
+_CORE_SUBJECTS = {"语文", "数学", "英语", "Chinese", "Mathematics", "English"}
+_PE_SUBJECTS = {"体育", "Physical Education"}
+_PASS_SUBJECTS = {"信息科技", "技术", "Technology"}
+
+
+def _random_score(subject: dict[str, Any]) -> str:
+    name = subject.get("name_zh") or subject.get("name") or ""
+    if "实验" in name or name in _PASS_SUBJECTS:
+        return "PASS"
+    if name in _PE_SUBJECTS:
+        return "EXCELLENT"
+    if name in _CORE_SUBJECTS:
+        return str(random.randint(128, 150))
+    return str(random.randint(82, 99))
+
+
+def random_sample() -> dict[str, Any]:
+    """基于示例模板生成随机但合理的预置数据（保留科目结构与备注）。"""
+    data = load_data(SAMPLE_PATH)
+    name_cn, name_roman, gender = random.choice(_PEOPLE)
+    school = random.choice(_SCHOOLS)
+    enroll_year = random.randint(2019, 2022)
+    grad_year = enroll_year + 3
+    birth_year = enroll_year - 15
+    birth_month = random.randint(1, 12)
+    birth_day = random.randint(1, 28)
+    issue_month = random.choice([6, 7])
+    issue_day = random.randint(1, 28)
+
+    data.update({
+        "language_mode": "en",
+        "name_cn": name_cn,
+        "name_en": name_roman,
+        "name_jp": name_roman,
+        "gender_cn": gender,
+        "school_cn": school["cn"],
+        "school_en": school["en"],
+        "school_short_en": school["short_en"],
+        "school_short_jp": school["jp"],
+        "address_cn": school["addr_cn"],
+        "address_en": school["addr_en"],
+        "post_code": school["post"],
+        "birth_date": f"{birth_year}-{birth_month:02d}-{birth_day:02d}",
+        "issue_date": f"{grad_year}-{issue_month:02d}-{issue_day:02d}",
+        "study_start_cn": f"{enroll_year} 年 9 月",
+        "study_end_cn": f"{grad_year} 年 6 月",
+        "study_start_en": f"September {enroll_year}",
+        "study_end_en": f"June {grad_year}",
+        "study_start_jp": f"{enroll_year}年9月",
+        "study_end_jp": f"{grad_year}年6月",
+        "enroll_month_en": f"September {enroll_year}",
+        "graduate_month_en": f"June {grad_year}",
+    })
+    for subject in data.get("subjects", []):
+        for col in SCORE_COLUMNS:
+            subject[col] = _random_score(subject)
+    return data
+
+
 def json_to_data(payload: dict[str, Any]) -> dict[str, Any]:
     """把前端提交的 JSON 合并到示例默认值上，生成 generate_pdf 所需的数据结构。"""
     data = load_data(SAMPLE_PATH)
@@ -132,7 +237,7 @@ def register_routes(app, api_prefix: str = "") -> None:
 
     @app.route(prefix + "/sample", methods=["GET"], endpoint="api_sample")
     def sample():
-        return jsonify(load_data(SAMPLE_PATH))
+        return jsonify(random_sample())
 
     @app.route(prefix + "/generate", methods=["POST"], endpoint="api_generate")
     def generate():
