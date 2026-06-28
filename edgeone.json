@@ -1,0 +1,10 @@
+{
+  "name": "syoumei",
+  "buildCommand": "",
+  "outputDirectory": "./",
+  "cloudFunctions": {
+    "python": {
+      "maxDuration": 60
+    }
+  }
+}
