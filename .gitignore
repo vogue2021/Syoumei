@@ -8,3 +8,10 @@ tmp/
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 本地虚拟环境
+.venv/
+
+# EdgeOne Pages 本地产物
+.edgeone/
+node_modules/

@@ -15,15 +15,17 @@
 
 ## 🧰 技术栈
 
-- Python 标准库 `http.server`（零 Web 框架，轻量）
-- [ReportLab](https://www.reportlab.com/) 生成 PDF
-- 原生 HTML / CSS / JS 前端，无构建步骤
+- **前端**：纯静态 HTML / CSS / JS（无构建步骤），通过 `/api` 调用后端
+- **后端**：[Flask](https://flask.palletsprojects.com/) 提供 `/api/generate`、`/api/feedback`、`/api/sample`
+- **PDF**：[ReportLab](https://www.reportlab.com/)，PDF 在内存中生成并直接以二进制流返回（无需落盘）
+- **部署形态**：[EdgeOne Pages](https://edgeone.ai/document/pages)（静态托管 + Python 云函数）
 
-## 🚀 快速开始
+## 🚀 本地开发
 
 ### 1. 安装依赖
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -38,19 +40,27 @@ cp .env.example .env
 
 > `.env` 已被 `.gitignore` 忽略，密钥不会进入版本库。不配置也能正常生成 PDF，只是反馈表单不可用。
 
-### 3. 启动 Web 服务
+### 3. 启动本地服务
 
 ```bash
 ./run_web.sh
 ```
 
-浏览器打开：
+浏览器打开 `http://127.0.0.1:8765`，填写后点「预览 / 生成 PDF」，结果在页面内嵌预览并可直接下载。
 
-```text
-http://127.0.0.1:8765
-```
+## ☁️ 部署到 EdgeOne Pages
 
-填写后点击「生成 PDF」，文件保存到 `output/pdf/`；也可先点「预览 PDF」边改边看。
+项目已按 EdgeOne Pages 约定组织，可直接在控制台导入仓库部署：
+
+- **静态资源根目录**：仓库根目录（`index.html` 等）
+- **构建命令**：无（纯静态，留空）
+- **云函数**：`cloud-functions/api/[[default]].py`（Flask 入口，自动映射到 `/api/*`，平台会剥离 `/api` 前缀）
+- **依赖**：`cloud-functions/requirements.txt`
+- **环境变量**：在控制台配置 `SMTP_USER` / `SMTP_PASS` / `SMTP_HOST` / `SMTP_PORT` / `FEEDBACK_TO`（用于反馈邮件）
+
+> 字体：Serverless（Linux）环境无 macOS 系统字体，已内置三级回退，最终回退到 ReportLab 自带 CID 字体
+> （`STSong-Light` 中文、`HeiseiMin-W3` / `HeiseiKakuGo-W5` 日文，拉丁文用 `Times-Roman/Bold`），
+> 无需附带任何字体文件即可正确渲染中日文。
 
 ## ⌨️ 命令行生成
 
@@ -70,14 +80,24 @@ python3 generator.py sample_data.json -o output/pdf/test.pdf
 
 ```text
 .
-├── app.py            # Web 服务 + 表单渲染 + /api/feedback 接口
-├── generator.py      # PDF 生成核心（ReportLab）
-├── sample_data.json  # 示例数据 / 命令行输入
-├── run_web.sh        # 启动脚本
-├── requirements.txt  # Python 依赖
-├── .env.example      # 环境变量模板
-└── output/pdf/       # 生成结果（已忽略）
+├── index.html                       # 静态前端（表单 / 预览 / 反馈，调用 /api）
+├── app.py                           # 本地开发服务器（Flask：/ + /api，复用云函数代码）
+├── generator.py                     # 命令行薄壳（复用云函数中的生成核心）
+├── cloud-functions/
+│   ├── requirements.txt             # 云函数依赖（flask、reportlab）
+│   └── api/
+│       ├── [[default]].py           # EdgeOne 云函数入口（Flask，映射 /api/*）
+│       ├── service.py               # 路由 / 表单解析 / 反馈邮件
+│       ├── generator.py             # PDF 生成核心（ReportLab，单一事实来源）
+│       └── sample_data.json         # 后端默认值
+├── sample_data.json                 # 示例数据 / 命令行输入
+├── requirements.txt                 # 本地开发依赖
+├── run_web.sh                       # 本地启动脚本
+└── .env.example                     # 环境变量模板
 ```
+
+> PDF 生成核心位于 `cloud-functions/api/generator.py`（云函数打包仅包含 `cloud-functions/` 内文件），
+> 根目录 `generator.py` / `app.py` 通过 `sys.path` 复用同一份代码，避免重复维护。
 
 ## 📑 数据字段说明
 

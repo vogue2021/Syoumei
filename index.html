@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高中证明文书生成台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='6'%20y='6'%20width='52'%20height='52'%20rx='12'%20fill='%23b23a24'/%3E%3Crect%20x='11'%20y='11'%20width='42'%20height='42'%20rx='8'%20fill='none'%20stroke='%23fff'%20stroke-opacity='.55'%20stroke-width='2'/%3E%3Ctext%20x='32'%20y='45'%20font-size='34'%20text-anchor='middle'%20fill='%23fff'%20font-family='Songti%20SC,STSong,serif'%20font-weight='700'%3E%E8%A8%BC%3C/text%3E%3C/svg%3E">
+  <style>
+    :root {
+      --paper: oklch(0.968 0.012 80);
+      --surface: oklch(0.997 0.004 90);
+      --surface-2: oklch(0.985 0.008 80);
+      --ink: oklch(0.28 0.018 50);
+      --ink-soft: oklch(0.49 0.02 55);
+      --line: oklch(0.87 0.014 70);
+      --vermilion: oklch(0.56 0.20 30);
+      --vermilion-deep: oklch(0.46 0.17 30);
+      --vermilion-wash: oklch(0.95 0.035 45);
+      --radius: 14px;
+      --shadow-sm: 0 1px 2px rgba(80,30,15,.05);
+      --shadow: 0 2px 4px rgba(80,30,15,.05), 0 14px 30px -18px rgba(150,50,25,.35);
+      --serif: "Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",Georgia,serif;
+      --sans: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+      --ease: cubic-bezier(0.22,1,0.36,1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--sans); color: var(--ink); line-height: 1.5;
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(oklch(0.5 0.02 60 / 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, oklch(0.5 0.02 60 / 0.025) 1px, transparent 1px);
+      background-size: 26px 26px;
+    }
+    .site-header {
+      position: relative; overflow: hidden;
+      background: linear-gradient(120deg, var(--vermilion-deep), var(--vermilion));
+      color: oklch(0.99 0.01 85);
+      padding: clamp(20px, 4vw, 34px) clamp(18px, 5vw, 56px);
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+      box-shadow: 0 2px 0 oklch(0.99 0.01 85 / 0.5), 0 5px 0 var(--vermilion-deep);
+    }
+    .site-header::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+      background: repeating-linear-gradient(90deg, oklch(1 0 0 / 0.32) 0 14px, transparent 14px 28px);
+      pointer-events: none;
+    }
+    .site-header::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(120% 140% at 88% -10%, oklch(1 0 0 / 0.18), transparent 55%);
+      pointer-events: none;
+    }
+    .brand { display: flex; align-items: center; gap: 18px; z-index: 1; }
+    .seal {
+      flex: none; width: 60px; height: 60px; border-radius: 10px;
+      border: 2.5px solid oklch(0.99 0.01 85 / 0.92);
+      display: grid; place-items: center;
+      font-family: var(--serif); font-size: 30px; font-weight: 700;
+      color: oklch(0.99 0.01 85); transform: rotate(-4deg);
+      box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.25);
+    }
+    .brand h1 { margin: 0; font-family: var(--serif); font-size: clamp(20px, 3vw, 28px); font-weight: 700; letter-spacing: 1px; }
+    .subtitle { margin: 5px 0 0; font-size: 13px; opacity: 0.85; letter-spacing: 2px; }
+    .header-meta { z-index: 1; font-size: 12px; letter-spacing: 1px; opacity: 0.92; border: 1px solid oklch(1 0 0 / 0.4); padding: 6px 13px; border-radius: 999px; }
+    main { max-width: 1240px; margin: clamp(18px,3vw,32px) auto clamp(40px,6vw,72px); padding: 0 clamp(14px,4vw,28px); }
+    form { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px,2vw,20px); }
+    .card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: clamp(16px,2vw,24px); position: relative; box-shadow: var(--shadow-sm);
+      transition: box-shadow .35s var(--ease), transform .35s var(--ease), border-color .35s var(--ease);
+    }
+    .card::before {
+      content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 3px 3px 0;
+      background: linear-gradient(var(--vermilion), var(--vermilion-deep)); opacity: 0; transition: opacity .35s var(--ease);
+    }
+    .card:focus-within { box-shadow: var(--shadow); border-color: oklch(0.78 0.08 35); transform: translateY(-1px); }
+    .card:focus-within::before { opacity: 1; }
+    .card.hidden, label.hidden, input.hidden, select.hidden { display: none; }
+    h2 {
+      margin: 0 0 16px; font-family: var(--serif); font-size: 17px; font-weight: 700; letter-spacing: .5px;
+      display: flex; align-items: baseline; gap: 10px; color: var(--ink);
+      padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    h2 .idx { font-size: 12px; font-weight: 600; color: var(--vermilion); letter-spacing: 1px; font-family: var(--serif); }
+    label { display: grid; gap: 6px; margin-bottom: 13px; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .3px; }
+    label span { font-weight: 500; }
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font: inherit;
+      background: var(--surface-2); color: var(--ink);
+      transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+    }
+    input:hover, select:hover, textarea:hover { border-color: oklch(0.80 0.04 50); }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--vermilion); background: var(--surface);
+      box-shadow: 0 0 0 3px var(--vermilion-wash);
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    select { cursor: pointer; }
+    .month-pick { cursor: pointer; }
+    .month-out { font-size: 11px; color: var(--ink-soft); letter-spacing: .3px; opacity: .9; }
+    .mode-card { grid-column: 1 / -1; background: linear-gradient(135deg, var(--surface), var(--vermilion-wash)); }
+    .mode-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .mode-row label { margin: 0; min-width: 240px; }
+    .mode-hint { font-size: 12.5px; color: var(--ink-soft); max-width: 480px; }
+    .wide { grid-column: 1 / -1; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .toolbar h2 { margin: 0; border: 0; padding: 0; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; }
+    thead th {
+      background: linear-gradient(var(--vermilion), var(--vermilion-deep)); color: oklch(0.99 0.01 85);
+      font-size: 11.5px; font-weight: 600; letter-spacing: .5px; padding: 10px 6px; border: 0;
+    }
+    thead th:first-child { border-radius: 9px 0 0 0; }
+    thead th:last-child { border-radius: 0 9px 0 0; }
+    tbody td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 4px; }
+    tbody td:first-child { border-left: 1px solid var(--line); }
+    tbody tr:nth-child(even) td { background: var(--surface-2); }
+    tbody tr:hover td { background: var(--vermilion-wash); }
+    td input { border: 1px solid transparent; background: transparent; padding: 7px; border-radius: 6px; }
+    td input:focus { border-color: var(--vermilion); background: var(--surface); box-shadow: none; }
+    .subject-name { min-width: 150px; font-weight: 500; }
+    button {
+      border: 0; border-radius: 10px; background: linear-gradient(var(--vermilion), var(--vermilion-deep));
+      color: oklch(0.99 0.01 85); padding: 11px 20px; font: inherit; font-weight: 600; letter-spacing: .5px; cursor: pointer;
+      transition: transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+      box-shadow: 0 6px 16px -8px var(--vermilion-deep);
+    }
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 10px 22px -8px var(--vermilion-deep); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: .6; cursor: not-allowed; transform: none; filter: none; }
+    .btn-ghost { background: transparent; color: var(--vermilion-deep); border: 1.5px solid var(--vermilion); box-shadow: none; }
+    .btn-ghost:hover { background: var(--vermilion-wash); filter: none; box-shadow: none; }
+    .icon-btn { padding: 7px 13px; font-size: 12px; font-weight: 600; }
+    .danger { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); box-shadow: none; font-weight: 500; }
+    .danger:hover { background: oklch(0.95 0.04 25); color: var(--vermilion-deep); border-color: var(--vermilion); filter: none; box-shadow: none; }
+    .actions { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; padding: 4px 2px; flex-wrap: wrap; }
+    .actions .hint { font-size: 12px; color: var(--ink-soft); margin-left: auto; }
+    a { color: var(--vermilion-deep); text-decoration: none; border-bottom: 1px solid var(--vermilion-wash); }
+    a:hover { border-bottom-color: var(--vermilion); }
+    .notice { grid-column: 1 / -1; padding: 13px 16px; border-radius: 10px; font-size: 13.5px; margin-bottom: clamp(14px,2vw,20px); }
+    .message { background: oklch(0.96 0.04 150); border: 1px solid oklch(0.80 0.10 150); color: oklch(0.40 0.10 150); }
+    .error { background: oklch(0.96 0.04 25); border: 1px solid oklch(0.80 0.12 25); color: oklch(0.45 0.15 25); white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; }
+    .preview { grid-column: 1 / -1; }
+    .preview .pv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .preview iframe { width: 100%; height: 780px; border: 1px solid var(--line); border-radius: var(--radius); background: white; box-shadow: var(--shadow); }
+    .site-footer {
+      position: relative; overflow: hidden;
+      margin-top: clamp(30px, 5vw, 60px);
+      background: linear-gradient(120deg, var(--vermilion-deep), var(--vermilion));
+      color: oklch(0.99 0.01 85);
+      padding: clamp(22px, 4vw, 36px) clamp(18px, 5vw, 56px);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+      box-shadow: 0 -2px 0 oklch(0.99 0.01 85 / 0.5), 0 -5px 0 var(--vermilion-deep);
+    }
+    .site-footer::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(120% 150% at 10% 120%, oklch(1 0 0 / 0.16), transparent 55%);
+      pointer-events: none;
+    }
+    .foot-brand { display: flex; align-items: center; gap: 16px; z-index: 1; }
+    .seal-sm { width: 46px; height: 46px; font-size: 23px; border-radius: 9px; }
+    .foot-brand strong { font-family: var(--serif); font-size: 16px; font-weight: 700; letter-spacing: .8px; }
+    .foot-brand p { margin: 4px 0 0; font-size: 12px; opacity: .82; letter-spacing: 1.2px; }
+    .foot-meta { z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 11px; text-align: right; }
+    .foot-langs { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .foot-langs span { font-size: 11px; letter-spacing: 1px; border: 1px solid oklch(1 0 0 / 0.42); padding: 4px 11px; border-radius: 999px; }
+    .foot-copy { margin: 0; font-size: 11.5px; opacity: .8; letter-spacing: .8px; }
+    .contact-fab {
+      position: fixed; right: clamp(16px,3vw,30px); bottom: clamp(16px,3vw,30px); z-index: 40;
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px;
+      box-shadow: 0 12px 28px -8px var(--vermilion-deep);
+    }
+    .contact-fab svg { width: 17px; height: 17px; }
+    .modal-mask {
+      position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center;
+      padding: 20px; background: oklch(0.28 0.018 50 / 0.45); backdrop-filter: blur(3px);
+    }
+    .modal-mask.open { display: flex; }
+    .modal {
+      width: min(460px, 100%); background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; animation: pop .3s var(--ease);
+    }
+    @keyframes pop { from { transform: translateY(12px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-head {
+      background: linear-gradient(120deg, var(--vermilion-deep), var(--vermilion)); color: oklch(0.99 0.01 85);
+      padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h3 { margin: 0; font-family: var(--serif); font-size: 16px; letter-spacing: .5px; }
+    .modal-close { background: transparent; box-shadow: none; padding: 2px 9px; font-size: 20px; line-height: 1; }
+    .modal-close:hover { background: oklch(1 0 0 / 0.16); filter: none; box-shadow: none; transform: none; }
+    .modal-body { padding: 20px; }
+    .modal-body label { margin-bottom: 14px; }
+    .contact-note { font-size: 12px; color: var(--ink-soft); margin: 0 0 16px; letter-spacing: .2px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 2px; }
+    @media (max-width: 900px) {
+      form { grid-template-columns: 1fr; }
+      table { min-width: 840px; }
+      .table-scroll { overflow-x: auto; border-radius: var(--radius); }
+      .mode-row label { min-width: 100%; }
+      .site-footer { flex-direction: column; align-items: flex-start; }
+      .foot-meta { align-items: flex-start; text-align: left; }
+      .foot-langs { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="seal">証</div>
+      <div class="brand-text">
+        <h1>高中证明文书生成台</h1>
+        <p class="subtitle">毕业证明 · 成绩证明 · 多语种公文排版</p>
+      </div>
+    </div>
+    <div class="header-meta">中 · 英 · 日 · 中英 · 中日</div>
+  </header>
+  <main>
+    <div class="notice message hidden" id="msg"></div>
+    <div class="notice error hidden" id="err"></div>
+    <form id="certForm" onsubmit="return false">
+      <section class="card mode-card">
+        <h2><span class="idx">01</span>生成版本</h2>
+        <div class="mode-row">
+          <label><span>语言版本</span>
+            <select name="language_mode" id="languageMode" onchange="syncModeFields()">
+              <option value="en">英语版</option>
+              <option value="ja">日语版</option>
+              <option value="zh">中文版</option>
+              <option value="zh_en">中英双语版</option>
+              <option value="zh_ja">中日双语版</option>
+            </select>
+          </label>
+          <p class="mode-hint">选择版本后，下方字段、成绩表科目名与备注会按所选语言自动切换显示。</p>
+        </div>
+      </section>
+      <section class="card">
+        <h2><span class="idx">02</span>学生信息</h2>
+        <div id="fieldsLeft"></div>
+      </section>
+      <section class="card">
+        <h2><span class="idx">03</span>学校与时间</h2>
+        <div id="fieldsRight"></div>
+      </section>
+      <section class="card wide">
+        <div class="toolbar">
+          <h2><span class="idx">04</span>成绩表</h2>
+          <button type="button" class="btn-ghost icon-btn" onclick="addRow()">+ 新增科目</button>
+        </div>
+        <div class="table-scroll">
+          <table id="scoreTable">
+            <thead>
+              <tr>
+                <th id="subjectHeader">科目名</th><th>第一学年 前期</th><th>第一学年 后期</th><th>第二学年 前期</th><th>第二学年 后期</th><th>第三学年 前期</th><th>第三学年 后期</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="card" data-modes="en,zh_en">
+        <h2><span class="idx">注</span>英文备注</h2>
+        <textarea name="notes_en"></textarea>
+      </section>
+      <section class="card" data-modes="ja,zh_ja">
+        <h2><span class="idx">注</span>日文备注</h2>
+        <textarea name="notes_jp"></textarea>
+      </section>
+      <section class="card" data-modes="zh">
+        <h2><span class="idx">注</span>中文备注</h2>
+        <textarea name="notes_zh"></textarea>
+      </section>
+      <div class="actions">
+        <button type="button" id="btnGenerate" onclick="generate('generate')">生成 PDF</button>
+        <button type="button" id="btnPreview" class="btn-ghost" onclick="generate('preview')">预览 PDF</button>
+        <span class="hint">生成后可在下方预览并下载</span>
+      </div>
+      <section class="card preview hidden" id="previewCard">
+        <div class="pv-head">
+          <h2 style="margin:0;border:0;padding:0;"><span class="idx">★</span>预览</h2>
+          <a id="downloadLink" href="#" download>下载 PDF</a>
+        </div>
+        <iframe id="previewFrame" title="PDF 预览"></iframe>
+      </section>
+    </form>
+  </main>
+  <footer class="site-footer">
+    <div class="foot-brand">
+      <div class="seal seal-sm">証</div>
+      <div>
+        <strong>高中证明文书生成台</strong>
+        <p>毕业证明 · 成绩证明 · 留学申请公文排版</p>
+      </div>
+    </div>
+    <div class="foot-meta">
+      <div class="foot-langs"><span>中</span><span>英</span><span>日</span><span>中英</span><span>中日</span></div>
+      <p class="foot-copy">&copy; <span id="footYear"></span> 文书生成台 · 仅用于学校核发证明排版</p>
+    </div>
+  </footer>
+  <button type="button" class="contact-fab" onclick="openContact()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+    联系作者
+  </button>
+  <div class="modal-mask" id="contactMask" onclick="if(event.target===this)closeContact()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3>联系作者 · 反馈与合作</h3>
+        <button type="button" class="modal-close" onclick="closeContact()" aria-label="关闭">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="contact-note">选择类型并填写内容后点击发送，反馈会直接送达作者邮箱，作者会尽快回复。</p>
+        <label><span>反馈类型</span>
+          <select id="ctType">
+            <option value="功能建议">功能建议</option>
+            <option value="商务合作">商务合作</option>
+            <option value="印章 / 公章需求">印章 / 公章需求</option>
+            <option value="问题反馈 / 报错">问题反馈 / 报错</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+        <label><span>你的联系方式（邮箱 / 微信，选填）</span>
+          <input id="ctContact" placeholder="方便作者回复你">
+        </label>
+        <label><span>具体内容</span>
+          <textarea id="ctBody" placeholder="请描述你的建议、合作意向或需求…"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="danger" onclick="closeContact()">取消</button>
+          <button type="button" onclick="sendContact()">发送邮件</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const API = '/api';
+    const COLS = ["g1_t1", "g1_t2", "g2_t1", "g2_t2", "g3_t1", "g3_t2"];
+    const ALL = "en,ja,zh_en,zh,zh_ja";
+    const FIELDS_LEFT = [
+      ["name_cn", "中文姓名", "zh_en,zh,zh_ja", "text"],
+      ["name_en", "英文姓名/护照姓名", "en,ja,zh_en,zh_ja", "text"],
+      ["name_jp", "日文版姓名", "ja,zh_ja", "text"],
+      ["gender_cn", "中文性别", ALL, "select:男,女"],
+      ["birth_date", "出生日期", ALL, "date"],
+      ["issue_date", "落款日期", ALL, "date"]
+    ];
+    const FIELDS_RIGHT = [
+      ["school_cn", "页眉中文学校名", ALL, "text"],
+      ["school_en", "页眉英文学校名", ALL, "text"],
+      ["school_short_en", "正文英文学校简称", "en", "text"],
+      ["school_short_jp", "正文日文学校名", "ja,zh_ja", "text"],
+      ["address_cn", "页脚中文地址", ALL, "text"],
+      ["address_en", "页脚英文地址", ALL, "text"],
+      ["post_code", "邮编", ALL, "text"],
+      ["study_start_cn", "中文入学时间", "zh_en,zh,zh_ja", "monthfmt:cn"],
+      ["study_end_cn", "中文毕业时间", "zh_en,zh,zh_ja", "monthfmt:cn"],
+      ["study_start_en", "英文入学时间", "en,zh_en", "monthfmt:en"],
+      ["study_end_en", "英文毕业时间", "en,zh_en", "monthfmt:en"],
+      ["study_start_jp", "日文入学时间", "ja,zh_ja", "monthfmt:jp"],
+      ["study_end_jp", "日文毕业时间", "ja,zh_ja", "monthfmt:jp"],
+      ["enroll_month_en", "英文毕业证明入学月份", "en,zh_en", "monthfmt:en"],
+      ["graduate_month_en", "英文毕业证明毕业月份", "en,zh_en", "monthfmt:en"]
+    ];
+    const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const MONTH_LOOKUP = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
+
+    let SAMPLE = {};
+
+    function esc(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function parseYearMonth(text) {
+      if (!text) return '';
+      const t = String(text);
+      const ym = t.match(/(\d{4})/);
+      if (!ym) return '';
+      const year = ym[1];
+      let month = null;
+      const nm = t.toLowerCase().match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/);
+      if (nm) { month = MONTH_LOOKUP[nm[1]]; }
+      else {
+        const nums = t.match(/\d+/g) || [];
+        for (const n of nums) { if (n !== year && +n >= 1 && +n <= 12) { month = +n; break; } }
+      }
+      return month ? (year + '-' + String(month).padStart(2, '0')) : '';
+    }
+    function fmtMonth(lang, ym) {
+      if (!ym) return '';
+      const parts = ym.split('-');
+      const y = parts[0], mi = parseInt(parts[1], 10);
+      if (lang === 'en') return MONTHS_EN[mi - 1] + ' ' + y;
+      if (lang === 'cn') return y + ' 年 ' + mi + ' 月';
+      if (lang === 'jp') return y + '年' + mi + '月';
+      return ym;
+    }
+    function control(key, type, value) {
+      value = value == null ? '' : value;
+      if (type === 'date') {
+        return '<input type="date" name="' + key + '" value="' + esc(value) + '">';
+      }
+      if (type.indexOf('monthfmt:') === 0) {
+        const lang = type.split(':')[1];
+        const ym = parseYearMonth(value);
+        const display = value ? esc(value) : '—';
+        return '<input type="month" class="month-pick" data-lang="' + lang + '" value="' + ym + '">' +
+          '<input type="hidden" name="' + key + '" value="' + esc(value) + '">' +
+          '<small class="month-out">输出：' + display + '</small>';
+      }
+      if (type.indexOf('select:') === 0) {
+        const opts = type.split(':')[1].split(',').map(function (opt) {
+          return '<option value="' + esc(opt) + '"' + (String(value) === opt ? ' selected' : '') + '>' + esc(opt) + '</option>';
+        }).join('');
+        return '<select name="' + key + '">' + opts + '</select>';
+      }
+      return '<input name="' + key + '" value="' + esc(value) + '">';
+    }
+    function renderFields(containerId, fields) {
+      const html = fields.map(function (f) {
+        const key = f[0], label = f[1], modes = f[2], type = f[3] || 'text';
+        return '<label data-modes="' + modes + '"><span>' + label + '</span>' + control(key, type, SAMPLE[key]) + '</label>';
+      }).join('');
+      document.getElementById(containerId).innerHTML = html;
+    }
+    function subjectRowHtml(subject) {
+      subject = subject || {};
+      const nameEn = subject.name_en || subject.name || '';
+      const nameJa = subject.name_ja || subject.name_jp || subject.name || '';
+      const nameZh = subject.name_zh || subject.name_cn || subject.name || '';
+      let cells = '<td><input name="subject_name_en" value="' + esc(nameEn) + '" class="subject-name" data-modes="en,zh_en">' +
+        '<input name="subject_name_ja" value="' + esc(nameJa) + '" class="subject-name" data-modes="ja,zh_ja">' +
+        '<input name="subject_name_zh" value="' + esc(nameZh) + '" class="subject-name" data-modes="zh,zh_en,zh_ja"></td>';
+      cells += COLS.map(function (c) {
+        return '<td><input name="' + c + '" value="' + esc(subject[c] || '') + '"></td>';
+      }).join('');
+      cells += '<td><button type="button" class="icon-btn danger" onclick="removeRow(this)">删除</button></td>';
+      return '<tr>' + cells + '</tr>';
+    }
+    function renderRows(subjects) {
+      document.querySelector('#scoreTable tbody').innerHTML = (subjects || []).map(subjectRowHtml).join('');
+    }
+    function addRow() {
+      const tmp = document.createElement('tbody');
+      tmp.innerHTML = subjectRowHtml({});
+      document.querySelector('#scoreTable tbody').appendChild(tmp.firstElementChild);
+      syncModeFields();
+    }
+    function removeRow(button) {
+      const tbody = document.querySelector('#scoreTable tbody');
+      if (tbody.rows.length > 1) button.closest('tr').remove();
+    }
+    function syncModeFields() {
+      const mode = document.getElementById('languageMode').value;
+      document.querySelectorAll('[data-modes]').forEach(function (el) {
+        const modes = el.getAttribute('data-modes').split(',');
+        el.classList.toggle('hidden', !modes.includes(mode));
+      });
+      const labels = {
+        en: '科目名（英语版）',
+        ja: '科目名（日语版）',
+        zh: '科目名（中文版）',
+        zh_en: '科目名（中英双语版：中文 + 英文）',
+        zh_ja: '科目名（中日双语版：中文 + 日文）'
+      };
+      document.getElementById('subjectHeader').textContent = labels[mode] || '科目名';
+    }
+    function bindMonthPicks() {
+      document.querySelectorAll('.month-pick').forEach(function (pick) {
+        pick.addEventListener('change', function () {
+          const txt = fmtMonth(pick.dataset.lang, pick.value);
+          const hidden = pick.parentElement.querySelector('input[type=hidden]');
+          if (hidden) hidden.value = txt;
+          const out = pick.parentElement.querySelector('.month-out');
+          if (out) out.textContent = '输出：' + (txt || '—');
+        });
+      });
+    }
+    function showMessage(text) {
+      const m = document.getElementById('msg');
+      m.innerHTML = text; m.classList.remove('hidden');
+      document.getElementById('err').classList.add('hidden');
+    }
+    function showError(text) {
+      const e = document.getElementById('err');
+      e.textContent = text; e.classList.remove('hidden');
+      document.getElementById('msg').classList.add('hidden');
+    }
+    function parseFilename(disposition) {
+      if (!disposition) return '';
+      const m = disposition.match(/filename\*=UTF-8''([^;]+)/i) || disposition.match(/filename="?([^";]+)"?/i);
+      return m ? decodeURIComponent(m[1]) : '';
+    }
+    function collectData(action) {
+      const form = document.getElementById('certForm');
+      const data = { action: action, language_mode: document.getElementById('languageMode').value, subjects: [] };
+      form.querySelectorAll('[name]').forEach(function (el) {
+        const n = el.getAttribute('name');
+        if (n.indexOf('subject_name_') === 0 || COLS.includes(n) || n === 'language_mode') return;
+        data[n] = el.value;
+      });
+      document.querySelectorAll('#scoreTable tbody tr').forEach(function (tr) {
+        const get = function (sel) { const e = tr.querySelector(sel); return e ? e.value.trim() : ''; };
+        const row = {
+          name_en: get('input[name=subject_name_en]'),
+          name_ja: get('input[name=subject_name_ja]'),
+          name_zh: get('input[name=subject_name_zh]')
+        };
+        COLS.forEach(function (c) { row[c] = get('input[name=' + c + ']'); });
+        data.subjects.push(row);
+      });
+      return data;
+    }
+    let currentObjectUrl = null;
+    async function generate(action) {
+      const btns = [document.getElementById('btnGenerate'), document.getElementById('btnPreview')];
+      btns.forEach(function (b) { b.disabled = true; });
+      try {
+        const resp = await fetch(API + '/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(collectData(action))
+        });
+        if (!resp.ok) {
+          let detail = '生成失败（' + resp.status + '）';
+          try { const e = await resp.json(); if (e && e.error) detail = e.error; } catch (e) {}
+          showError(detail);
+          return;
+        }
+        const blob = await resp.blob();
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(blob);
+        const fname = parseFilename(resp.headers.get('Content-Disposition')) || 'certificate.pdf';
+        document.getElementById('previewFrame').src = currentObjectUrl;
+        const dl = document.getElementById('downloadLink');
+        dl.href = currentObjectUrl; dl.setAttribute('download', fname);
+        document.getElementById('previewCard').classList.remove('hidden');
+        document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showMessage(action === 'preview' ? '已生成预览，可在下方查看' : '已生成：<a href="' + currentObjectUrl + '" target="_blank">' + esc(fname) + '</a>（也可点右上角下载）');
+      } catch (err) {
+        showError('网络错误，请稍后重试。');
+      } finally {
+        btns.forEach(function (b) { b.disabled = false; });
+      }
+    }
+
+    const CONTACT_EMAIL = 'jiangpeng527@gmail.com';
+    function openContact() { document.getElementById('contactMask').classList.add('open'); }
+    function closeContact() { document.getElementById('contactMask').classList.remove('open'); }
+    async function sendContact() {
+      const type = document.getElementById('ctType').value;
+      const contact = document.getElementById('ctContact').value.trim();
+      const content = document.getElementById('ctBody').value.trim();
+      if (!content) { alert('请先填写具体内容'); return; }
+      const btns = document.querySelectorAll('.modal-actions button');
+      btns.forEach(function (b) { b.disabled = true; });
+      try {
+        const resp = await fetch(API + '/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: type, contact: contact, content: content })
+        });
+        const result = await resp.json();
+        if (resp.ok && result.ok) {
+          alert('发送成功，感谢你的反馈！');
+          document.getElementById('ctBody').value = '';
+          document.getElementById('ctContact').value = '';
+          closeContact();
+        } else {
+          alert('发送失败：' + (result.error || '请稍后重试') + '\n你也可邮件联系 ' + CONTACT_EMAIL);
+        }
+      } catch (err) {
+        alert('发送失败，请检查网络或稍后重试。\n你也可邮件联系 ' + CONTACT_EMAIL);
+      } finally {
+        btns.forEach(function (b) { b.disabled = false; });
+      }
+    }
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeContact(); });
+
+    function initForm() {
+      document.getElementById('languageMode').value = SAMPLE.language_mode || 'en';
+      renderFields('fieldsLeft', FIELDS_LEFT);
+      renderFields('fieldsRight', FIELDS_RIGHT);
+      renderRows(SAMPLE.subjects || []);
+      document.querySelector('textarea[name=notes_en]').value = SAMPLE.notes_en || '';
+      document.querySelector('textarea[name=notes_jp]').value = SAMPLE.notes_jp || '';
+      document.querySelector('textarea[name=notes_zh]').value = SAMPLE.notes_zh || '';
+      bindMonthPicks();
+      syncModeFields();
+      document.getElementById('footYear').textContent = new Date().getFullYear();
+    }
+
+    (async function () {
+      try {
+        const resp = await fetch(API + '/sample');
+        if (resp.ok) SAMPLE = await resp.json();
+      } catch (e) { /* 取样失败则使用空默认值 */ }
+      initForm();
+    })();
+  </script>
+</body>
+</html>
