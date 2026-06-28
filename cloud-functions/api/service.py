@@ -230,16 +230,27 @@ def json_to_data(payload: dict[str, Any]) -> dict[str, Any]:
 def register_routes(app, api_prefix: str = "") -> None:
     """把 API 路由挂到 Flask app 上。
 
-    - 本地开发：api_prefix="/api"，对外路径为 /api/generate 等。
-    - EdgeOne 云函数：api_prefix=""（平台已剥离 /api 前缀），内部路径为 /generate 等。
+    为兼容不同运行环境对文件系统前缀的处理（线上平台是否剥离 /api 前缀
+    存在不确定性），同一组路由会同时注册到「无前缀」与「/api 前缀」两种路径：
+    - /sample      与 /api/sample
+    - /generate    与 /api/generate
+    - /feedback    与 /api/feedback
+    这样无论平台是否剥离 /api，前端的 /api/* 请求都能命中。
     """
-    prefix = api_prefix.rstrip("/")
+    prefixes = {api_prefix.rstrip("/"), "/api", ""}
 
-    @app.route(prefix + "/sample", methods=["GET"], endpoint="api_sample")
+    def _add(rule: str, view, methods: list[str], name: str) -> None:
+        for idx, prefix in enumerate(sorted(prefixes)):
+            app.add_url_rule(
+                prefix + rule,
+                endpoint=f"{name}_{idx}",
+                view_func=view,
+                methods=methods,
+            )
+
     def sample():
         return jsonify(random_sample())
 
-    @app.route(prefix + "/generate", methods=["POST"], endpoint="api_generate")
     def generate():
         try:
             payload = request.get_json(force=True, silent=True) or {}
@@ -249,10 +260,9 @@ def register_routes(app, api_prefix: str = "") -> None:
             student = data.get("name_cn") or data.get("name_en") or "学生"
             if action == "preview":
                 filename = f"preview_{slug(student)}_{mode_label}.pdf"
-                disposition = "inline"
             else:
                 filename = f"{slug(student)}_高中证明资料_{mode_label}.pdf"
-                disposition = "inline"
+            disposition = "inline"
             pdf_bytes = generate_pdf_bytes(data)
         except Exception:
             traceback.print_exc()
@@ -266,7 +276,6 @@ def register_routes(app, api_prefix: str = "") -> None:
         resp.headers["Content-Length"] = str(len(pdf_bytes))
         return resp
 
-    @app.route(prefix + "/feedback", methods=["POST"], endpoint="api_feedback")
     def feedback():
         try:
             payload = request.get_json(force=True, silent=True) or {}
@@ -283,3 +292,7 @@ def register_routes(app, api_prefix: str = "") -> None:
         except Exception:
             traceback.print_exc()
             return jsonify({"ok": False, "error": "邮件发送失败，请稍后重试"}), 500
+
+    _add("/sample", sample, ["GET"], "api_sample")
+    _add("/generate", generate, ["POST"], "api_generate")
+    _add("/feedback", feedback, ["POST"], "api_feedback")
