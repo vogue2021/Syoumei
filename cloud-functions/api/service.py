@@ -296,3 +296,25 @@ def register_routes(app, api_prefix: str = "") -> None:
     _add("/sample", sample, ["GET"], "api_sample")
     _add("/generate", generate, ["POST"], "api_generate")
     _add("/feedback", feedback, ["POST"], "api_feedback")
+
+    # 调试兜底：仅在云函数入口（api_prefix="" ）注册，避免与本地 app.py 的 "/" 冲突。
+    # 仅当上面的具体路由都没匹配时才触发，返回 Flask 实际收到的路径，
+    # 用于定位平台对 /api 前缀的处理方式。定位完成后会移除。
+    if api_prefix == "":
+        def _debug(subpath: str = ""):
+            return jsonify({
+                "debug": "no route matched",
+                "path": request.path,
+                "full_path": request.full_path,
+                "script_root": request.script_root,
+                "registered": sorted({str(r) for r in app.url_map.iter_rules()}),
+            }), 404
+
+        app.add_url_rule(
+            "/", endpoint="dbg_root", view_func=_debug,
+            methods=["GET", "POST"],
+        )
+        app.add_url_rule(
+            "/<path:subpath>", endpoint="dbg_any", view_func=_debug,
+            methods=["GET", "POST"],
+        )
