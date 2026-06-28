@@ -12,11 +12,11 @@ from typing import Any
 
 from flask import Response, jsonify, request
 
-from generator import SCORE_COLUMNS, generate_pdf_bytes, load_data
+from generator import SCORE_COLUMNS, generate_pdf_bytes
+from sample_data import default_data
 
 
 ROOT = Path(__file__).resolve().parent
-SAMPLE_PATH = ROOT / "sample_data.json"
 
 FEEDBACK_TYPES = {"功能建议", "商务合作", "印章 / 公章需求", "问题反馈 / 报错", "其他"}
 
@@ -150,7 +150,7 @@ def _random_score(subject: dict[str, Any]) -> str:
 
 def random_sample() -> dict[str, Any]:
     """基于示例模板生成随机但合理的预置数据（保留科目结构与备注）。"""
-    data = load_data(SAMPLE_PATH)
+    data = default_data()
     name_cn, name_roman, gender = random.choice(_PEOPLE)
     school = random.choice(_SCHOOLS)
     enroll_year = random.randint(2019, 2022)
@@ -193,7 +193,7 @@ def random_sample() -> dict[str, Any]:
 
 def json_to_data(payload: dict[str, Any]) -> dict[str, Any]:
     """把前端提交的 JSON 合并到示例默认值上，生成 generate_pdf 所需的数据结构。"""
-    data = load_data(SAMPLE_PATH)
+    data = default_data()
     payload = payload or {}
 
     scalar_keys = [key for key in data.keys() if key != "subjects"]
