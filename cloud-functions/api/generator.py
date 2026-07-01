@@ -456,7 +456,7 @@ def localized_subjects(data: dict[str, Any], lang: str) -> list[dict[str, str]]:
 
 def draw_english_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     draw_template_frame(c, data)
-    draw_center(c, "Official Transcript", 656, FONT_SERIF_BOLD, 19)
+    draw_center(c, "Official Transcript", 674, FONT_SERIF_BOLD, 19)
     pronoun = data.get("pronoun_en", "She")
     possessive = data.get("possessive_en", "her")
     intro = (
@@ -464,14 +464,15 @@ def draw_english_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
         f"{pronoun} has completed {possessive} high school courses in {data['school_short_en']} High School, "
         f"from {data['study_start_en']} to {data['study_end_en']}."
     )
-    y = draw_wrapped(c, intro, 72, 604, 450, FONT_SERIF, 13.5, 20)
+    y = draw_wrapped(c, intro, 72, 622, 450, FONT_SERIF, 13.5, 20)
     c.setFont(FONT_SERIF, 13.5)
     c.drawString(72, y - 12, "The student's grades are as follows:")
     y_bottom = draw_score_table(c, localized_subjects(data, "en"), 72, y - 28, 450, "en", bottom_limit=150)
     note = data.get("notes_en", "The full score is 150 for Chinese, Mathematics, and English, and 100 for the other subjects.")
-    y = draw_wrapped(c, f"Notes: {note}", 72, y_bottom - 12, 330, FONT_SERIF, 9.2, 12)
-    draw_right(c, data["school_short_en"] + " High School", 520, y_bottom - 14, FONT_SERIF, 12)
-    draw_right(c, en_date(data["issue_date"]), 520, y_bottom - 32, FONT_SERIF, 12)
+    y = draw_wrapped(c, f"Notes: {note}", 72, y_bottom - 16, 450, FONT_SERIF, 9.2, 12)
+    y_sig = y - 14
+    draw_right(c, data["school_short_en"] + " High School", 520, y_sig, FONT_SERIF, 12)
+    draw_right(c, en_date(data["issue_date"]), 520, y_sig - 18, FONT_SERIF, 12)
 
 
 def draw_english_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
@@ -504,30 +505,31 @@ def draw_japanese_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
 
 def draw_japanese_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     draw_template_frame(c, data)
-    draw_center(c, "高校成績証明", 592, FONT_JP_BOLD, 18)
+    draw_center(c, "高校成績証明", 605, FONT_JP_BOLD, 18)
     name = data.get("name_jp") or data["name_en"]
     intro = (
         f"{name}、{data.get('gender_jp', '女')}、{jp_date(data['birth_date'])}生まれ。"
         f"{name}さんが{data['study_start_jp']}から{data['study_end_jp']}までの当校での学習成績は以下の通り："
     )
-    y = draw_wrapped(c, intro, 72, 548, 450, FONT_JP, 10.5, 15, by_char=True)
+    y = draw_wrapped(c, intro, 72, 562, 450, FONT_JP, 10.5, 15, by_char=True)
     y_bottom = draw_score_table(c, localized_subjects(data, "ja"), 72, y - 8, 450, "ja", bottom_limit=170)
     note = data.get("notes_jp", "この表の点数は国語、英語、数学は150点を満点とし、他の科目の点数は100点を満点とする。")
-    y = draw_wrapped(c, f"（注：{note}）", 72, y_bottom - 8, 450, FONT_JP, 9.5, 13, by_char=True)
-    draw_wrapped(c, "上記の通り相違ないことを証する。", 72, y - 5, 300, FONT_JP, 10, 14, by_char=True)
-    draw_right(c, data["school_short_jp"], 520, y - 8, FONT_JP, 11)
-    draw_right(c, jp_date(data["issue_date"]), 520, y - 26, FONT_JP, 11)
+    y = draw_wrapped(c, f"（注：{note}）", 72, y_bottom - 10, 450, FONT_JP, 9.5, 13, by_char=True)
+    y = draw_wrapped(c, "上記の通り相違ないことを証する。", 72, y - 6, 300, FONT_JP, 10, 14, by_char=True)
+    y_sig = y - 12
+    draw_right(c, data["school_short_jp"], 520, y_sig, FONT_JP, 11)
+    draw_right(c, jp_date(data["issue_date"]), 520, y_sig - 18, FONT_JP, 11)
 
 
 def draw_bilingual_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     draw_template_frame(c, data)
-    draw_center(c, "学生成绩证明", 646, FONT_CJK_BOLD, 16)
-    draw_center(c, "Certificate of Student Academic Achievements", 623, FONT_SERIF_BOLD, 17)
+    draw_center(c, "学生成绩证明", 662, FONT_CJK_BOLD, 16)
+    draw_center(c, "Certificate of Student Academic Achievements", 639, FONT_SERIF_BOLD, 17)
     cn = (
         f"{data['name_cn']}同学，{data['gender_cn']}，{cn_date(data['birth_date'])}出生，于"
         f"{data['study_start_cn']}至{data['study_end_cn']}在我校高中部学习。现摘录该生高中阶段各科成绩："
     )
-    y = draw_wrapped(c, cn, 72, 586, 450, FONT_CJK, 10.5, 15, by_char=True)
+    y = draw_wrapped(c, cn, 72, 600, 450, FONT_CJK, 10.5, 15, by_char=True)
     en = (
         f"Student {data['name_en']}, {data['gender_en']}, born on {en_date(data['birth_date'])}, "
         f"studied in the Senior High School Division of our school from {data['study_start_en']} "
@@ -535,10 +537,11 @@ def draw_bilingual_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     )
     y = draw_wrapped(c, en, 72, y - 2, 450, FONT_SERIF, 10, 13)
     y_bottom = draw_score_table(c, localized_subjects(data, "zh_en"), 72, y - 12, 450, "zh_en", bottom_limit=150)
-    y = draw_wrapped(c, f"注 / Notes: {data.get('notes_en', '')}", 72, y_bottom - 10, 330, FONT_CJK, 8.8, 12, by_char=True)
-    draw_right(c, data["school_cn"], 520, y_bottom - 12, FONT_CJK, 11)
-    draw_right(c, data["school_en"], 520, y_bottom - 28, FONT_SERIF, 9)
-    draw_right(c, slash_date(data["issue_date"]), 520, y_bottom - 44, FONT_SERIF, 10)
+    y = draw_wrapped(c, f"注 / Notes: {data.get('notes_en', '')}", 72, y_bottom - 14, 450, FONT_CJK, 8.8, 12, by_char=True)
+    y_sig = y - 12
+    draw_right(c, data["school_cn"], 520, y_sig, FONT_CJK, 11)
+    draw_right(c, data["school_en"], 520, y_sig - 16, FONT_SERIF, 9)
+    draw_right(c, slash_date(data["issue_date"]), 520, y_sig - 30, FONT_SERIF, 10)
 
 
 def draw_bilingual_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
@@ -575,17 +578,18 @@ def draw_chinese_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
 
 def draw_chinese_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     draw_template_frame(c, data)
-    draw_center(c, "高中成绩证明", 656, FONT_CJK_BOLD, 18)
+    draw_center(c, "高中成绩证明", 674, FONT_CJK_BOLD, 18)
     intro = (
         f"{data['name_cn']}同学，{data['gender_cn']}，{cn_date(data['birth_date'])}出生，于"
         f"{data['study_start_cn']}至{data['study_end_cn']}在我校高中部学习。现摘录该生高中阶段各科成绩："
     )
-    y = draw_wrapped(c, intro, 72, 612, 450, FONT_CJK, 12, 18, by_char=True)
+    y = draw_wrapped(c, intro, 72, 630, 450, FONT_CJK, 12, 18, by_char=True)
     y_bottom = draw_score_table(c, localized_subjects(data, "zh"), 72, y - 10, 450, "zh", bottom_limit=150)
     note = data.get("notes_zh", "本表中语文、数学、英语满分为150分，其他科目满分为100分。")
-    y = draw_wrapped(c, f"注：{note}", 72, y_bottom - 12, 360, FONT_CJK, 9, 13, by_char=True)
-    draw_right(c, data["school_cn"], 520, y_bottom - 14, FONT_CJK, 12)
-    draw_right(c, cn_date(data["issue_date"]), 520, y_bottom - 34, FONT_CJK, 12)
+    y = draw_wrapped(c, f"注：{note}", 72, y_bottom - 14, 450, FONT_CJK, 9, 13, by_char=True)
+    y_sig = y - 14
+    draw_right(c, data["school_cn"], 520, y_sig, FONT_CJK, 12)
+    draw_right(c, cn_date(data["issue_date"]), 520, y_sig - 20, FONT_CJK, 12)
 
 
 def draw_zh_ja_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
@@ -613,13 +617,13 @@ def draw_zh_ja_graduation(c: canvas.Canvas, data: dict[str, Any]) -> None:
 
 def draw_zh_ja_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     draw_template_frame(c, data)
-    draw_center(c, "学生成绩证明", 646, FONT_CJK_BOLD, 16)
-    draw_center(c, "成績証明書", 622, FONT_JP_BOLD, 17)
+    draw_center(c, "学生成绩证明", 660, FONT_CJK_BOLD, 16)
+    draw_center(c, "成績証明書", 636, FONT_JP_BOLD, 17)
     cn = (
         f"{data['name_cn']}同学，{data['gender_cn']}，{cn_date(data['birth_date'])}出生，于"
         f"{data['study_start_cn']}至{data['study_end_cn']}在我校高中部学习。现摘录该生高中阶段各科成绩："
     )
-    y = draw_wrapped(c, cn, 72, 586, 450, FONT_CJK, 10.5, 15, by_char=True)
+    y = draw_wrapped(c, cn, 72, 598, 450, FONT_CJK, 10.5, 15, by_char=True)
     name = data.get("name_jp") or data["name_en"]
     jp = (
         f"{name}、{data.get('gender_jp', '女')}、{jp_date(data['birth_date'])}生まれ。"
@@ -628,13 +632,14 @@ def draw_zh_ja_transcript(c: canvas.Canvas, data: dict[str, Any]) -> None:
     y = draw_wrapped(c, jp, 72, y - 2, 450, FONT_JP, 10, 14, by_char=True)
     y_bottom = draw_score_table(c, localized_subjects(data, "zh_ja"), 72, y - 12, 450, "zh_ja", bottom_limit=160)
     note_zh = data.get("notes_zh", "本表中语文、数学、英语满分为150分，其他科目满分为100分。")
-    y = draw_wrapped(c, f"注：{note_zh}", 72, y_bottom - 10, 360, FONT_CJK, 8.8, 12, by_char=True)
+    y = draw_wrapped(c, f"注：{note_zh}", 72, y_bottom - 12, 450, FONT_CJK, 8.8, 12, by_char=True)
     note_jp = data.get("notes_jp", "")
     if note_jp:
-        y = draw_wrapped(c, f"（注：{note_jp}）", 72, y - 1, 360, FONT_JP, 8.8, 12, by_char=True)
-    draw_right(c, data["school_cn"], 520, y_bottom - 12, FONT_CJK, 11)
-    draw_right(c, data["school_short_jp"], 520, y_bottom - 28, FONT_JP, 10)
-    draw_right(c, jp_date(data["issue_date"]), 520, y_bottom - 44, FONT_JP, 10)
+        y = draw_wrapped(c, f"（注：{note_jp}）", 72, y - 1, 450, FONT_JP, 8.8, 12, by_char=True)
+    y_sig = y - 12
+    draw_right(c, data["school_cn"], 520, y_sig, FONT_CJK, 11)
+    draw_right(c, data["school_short_jp"], 520, y_sig - 16, FONT_JP, 10)
+    draw_right(c, jp_date(data["issue_date"]), 520, y_sig - 30, FONT_JP, 10)
 
 
 def _render(c: canvas.Canvas, data: dict[str, Any]) -> None:
